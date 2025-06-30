@@ -163,7 +163,8 @@
             display: flex;
             justify-content: center;
             flex-wrap: wrap;
-            gap: 20px;
+            gap: 30px;
+            row-gap: 50px;
             margin-top: 30px;
             min-height: 250px;
         }
@@ -416,16 +417,19 @@
 
             .cards-area {
                 justify-content: center;
+                gap: 15px;
+                row-gap: 40px;
+                padding: 0 10px;
             }
 
             .card {
-                width: 100px;
-                height: 160px;
+                width: 80px;
+                height: 130px;
             }
 
             .card-name {
-                font-size: 0.8rem;
-                margin-top: 8px;
+                font-size: 0.7rem;
+                margin-top: 5px;
             }
         }
 
@@ -524,6 +528,7 @@
         let selectedCount = 1;
         let drawnCards = [];
         let currentCardId = null;
+        let previousPage = 'list'; // 상세페이지로 오기 전 페이지 추적
 
         // 타로 데이터 로드
         async function loadTarotData() {
@@ -638,7 +643,7 @@
         function revealCard(cardElement, card, index) {
             if (card.revealed) {
                 // 이미 뒤집힌 카드 클릭시 상세 페이지로
-                showCardDetail(card.Id);
+                showCardDetail(card.Id, 'draw');
                 return;
             }
 
@@ -680,20 +685,32 @@
                         </div>
                     `;
 
-                    cardItem.addEventListener('click', () => showCardDetail(card.Id));
+                    cardItem.addEventListener('click', () => showCardDetail(card.Id, 'list'));
                     grid.appendChild(cardItem);
                 });
             }
         }
 
         // 카드 상세 정보 표시
-        function showCardDetail(cardId) {
+        function showCardDetail(cardId, fromPage = null) {
             if (!tarotData) return;
 
             const card = tarotData.find(c => c.Id === cardId);
             if (!card) return;
 
             currentCardId = cardId;
+
+            // 이전 페이지 추적
+            if (fromPage) {
+                previousPage = fromPage;
+            } else {
+                // fromPage가 지정되지 않은 경우 현재 활성 페이지를 확인
+                if (document.getElementById('draw-page').classList.contains('active')) {
+                    previousPage = 'draw';
+                } else if (document.getElementById('list-page').classList.contains('active')) {
+                    previousPage = 'list';
+                }
+            }
 
             // 상세 페이지로 전환
             document.querySelectorAll('.page').forEach(page => {
@@ -776,8 +793,8 @@
                 page.classList.remove('active');
             });
             
-            // 이전 페이지 결정 (뽑기에서 왔는지 리스트에서 왔는지)
-            if (drawnCards.length > 0) {
+            // 이전 페이지로 돌아가기
+            if (previousPage === 'draw') {
                 document.getElementById('draw-page').classList.add('active');
                 document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
                 document.querySelector('[onclick="showPage(\'draw\')"]').classList.add('active');
