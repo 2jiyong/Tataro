@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tataro - 타로 카드</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 50px;
+            padding: 20px 0;
+            color: white;
+        }
+
+        h1 {
+            font-size: 4rem;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .navigation {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .nav-btn {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 2px solid rgba(255,255,255,0.3);
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .nav-btn:hover, .nav-btn.active {
+            background: rgba(255,255,255,0.3);
+            border-color: rgba(255,255,255,0.5);
+            transform: translateY(-2px);
+        }
+
+        .page {
+            display: none;
+            background: rgba(255,255,255,0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            backdrop-filter: blur(10px);
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        /* 카드 뽑기 페이지 */
+        .draw-options {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .draw-options h2 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .count-selector {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .count-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+        }
+
+        .count-btn:hover, .count-btn.selected {
+            background: #764ba2;
+            transform: scale(1.05);
+        }
+
+        .reverse-option {
+            margin: 20px 0;
+        }
+
+        .reverse-option label {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            cursor: pointer;
+            font-size: 1.1rem;
+        }
+
+        .reverse-option input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            accent-color: #667eea;
+        }
+
+        .draw-btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1.2rem;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+        }
+
+        .draw-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        .draw-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* 카드 표시 영역 */
+        .cards-area {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-top: 30px;
+            min-height: 200px;
+        }
+
+        .card {
+            width: 120px;
+            height: 200px;
+            position: relative;
+            cursor: pointer;
+            perspective: 1000px;
+        }
+
+        .card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+        }
+
+        .card.flipped .card-inner {
+            transform: rotateY(180deg);
+        }
+
+        .card-front, .card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 15px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            border: 3px solid #fff;
+        }
+
+        .card-front {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .card-back {
+            transform: rotateY(180deg);
+            overflow: hidden;
+        }
+
+        .card-back img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 12px;
+        }
+
+        .card.reversed .card-back img {
+            transform: rotate(180deg);
+        }
+
+        /* 카드 리스트 페이지 */
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .card-item {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .card-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+        }
+
+        .card-item img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+        }
+
+        .card-item-info {
+            padding: 15px;
+        }
+
+        .card-item-name {
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #333;
+        }
+
+        .card-item-keywords {
+            font-size: 0.9rem;
+            color: #666;
+            line-height: 1.4;
+        }
+
+        /* 카드 상세 페이지 */
+        .card-detail {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .card-detail-header {
+            display: flex;
+            gap: 30px;
+            margin-bottom: 30px;
+            align-items: flex-start;
+        }
+
+        .card-detail-image {
+            flex-shrink: 0;
+        }
+
+        .card-detail-image img {
+            width: 200px;
+            height: 350px;
+            object-fit: cover;
+            border-radius: 15px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+        }
+
+        .card-detail-info h2 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 2rem;
+        }
+
+        .card-detail-description {
+            line-height: 1.6;
+            margin-bottom: 20px;
+            color: #555;
+            font-size: 1.1rem;
+        }
+
+        .card-detail-keywords {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .keyword-tag {
+            background: #667eea;
+            color: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+        }
+
+        .back-btn {
+            background: #666;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background: #555;
+            transform: translateY(-2px);
+        }
+
+        .detail-sections {
+            margin-top: 30px;
+        }
+
+        .detail-section {
+            margin-bottom: 25px;
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 15px;
+        }
+
+        .detail-section h3 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 1.3rem;
+        }
+
+        .detail-section ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .detail-section li {
+            padding: 5px 0;
+            color: #555;
+            border-bottom: 1px solid #eee;
+        }
+
+        .detail-section li:last-child {
+            border-bottom: none;
+        }
+
+        /* 반응형 디자인 */
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+
+            h1 {
+                font-size: 2.5rem;
+            }
+
+            .navigation {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .count-selector {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .card-detail-header {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .card-detail-image {
+                align-self: center;
+            }
+
+            .cards-area {
+                justify-content: center;
+            }
+
+            .card {
+                width: 100px;
+                height: 160px;
+            }
+        }
+
+        /* 로딩 애니메이션 */
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 200px;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* 페이드 인 애니메이션 */
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔮 이웃집 타타로</h1>
+            <p class="subtitle">신비로운 타로 카드의 세계에 오신 것을 환영합니다</p>
+        </header>
+
+        <nav class="navigation">
+            <button class="nav-btn active" onclick="showPage('list')">카드 리스트</button>
+            <button class="nav-btn" onclick="showPage('draw')">카드 뽑기</button>
+        </nav>
+
+        <!-- 카드 리스트 페이지 -->
+        <div id="list-page" class="page active">
+            <h2 style="text-align: center; margin-bottom: 20px; color: #333;">모든 타로 카드</h2>
+            <div class="loading" id="list-loading">
+                <div class="spinner"></div>
+            </div>
+            <div class="cards-grid" id="cards-grid" style="display: none;"></div>
+        </div>
+
+        <!-- 카드 뽑기 페이지 -->
+        <div id="draw-page" class="page">
+            <div class="draw-options">
+                <h2>타로 카드 뽑기</h2>
+                <p style="margin-bottom: 20px; color: #666;">뽑을 카드 수를 선택하세요</p>
+                
+                <div class="count-selector">
+                    <button class="count-btn selected" onclick="selectCount(1)" data-count="1">1장</button>
+                    <button class="count-btn" onclick="selectCount(3)" data-count="3">3장</button>
+                    <button class="count-btn" onclick="selectCount(5)" data-count="5">5장</button>
+                    <button class="count-btn" onclick="selectCount(10)" data-count="10">10장</button>
+                </div>
+
+                <div class="reverse-option">
+                    <label>
+                        <input type="checkbox" id="allowReverse">
+                        역방향 카드 포함하기
+                    </label>
+                </div>
+
+                <button class="draw-btn" onclick="drawCards()">카드 뽑기</button>
+            </div>
+
+            <div class="cards-area" id="cards-area">
+                <p style="color: #666; font-style: italic;">카드를 뽑아보세요!</p>
+            </div>
+        </div>
+
+        <!-- 카드 상세 페이지 -->
+        <div id="detail-page" class="page">
+            <div class="card-detail" id="card-detail">
+                <!-- 카드 상세 내용이 여기에 동적으로 추가됩니다 -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let tarotData = null;
+        let selectedCount = 1;
+        let drawnCards = [];
+        let currentCardId = null;
+
+        // 타로 데이터 로드
+        async function loadTarotData() {
+            try {
+                const response = await fetch('Json/TarotInfo.json');
+                const data = await response.json();
+                tarotData = data.Deck;
+                console.log('타로 데이터 로드 완료:', tarotData.length, '장');
+            } catch (error) {
+                console.error('타로 데이터 로드 실패:', error);
+                alert('타로 데이터를 불러오는데 실패했습니다.');
+            }
+        }
+
+        // 페이지 전환
+        function showPage(pageType) {
+            // 모든 페이지 숨기기
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.remove('active');
+            });
+
+            // 모든 네비게이션 버튼 비활성화
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            // 선택된 페이지 표시
+            const targetPage = document.getElementById(pageType + '-page');
+            const targetBtn = event.target;
+            
+            if (targetPage) {
+                targetPage.classList.add('active', 'fade-in');
+                targetBtn.classList.add('active');
+
+                // 카드 리스트 페이지일 경우 카드 로드
+                if (pageType === 'list') {
+                    loadCardsList();
+                }
+            }
+        }
+
+        // 카드 수 선택
+        function selectCount(count) {
+            selectedCount = count;
+            document.querySelectorAll('.count-btn').forEach(btn => {
+                btn.classList.remove('selected');
+            });
+            event.target.classList.add('selected');
+        }
+
+        // 카드 뽑기
+        function drawCards() {
+            if (!tarotData) {
+                alert('타로 데이터를 먼저 로드해주세요.');
+                return;
+            }
+
+            const allowReverse = document.getElementById('allowReverse').checked;
+            const cardsArea = document.getElementById('cards-area');
+            
+            // 이전 카드들 제거
+            cardsArea.innerHTML = '';
+            drawnCards = [];
+
+            // 랜덤 카드 선택
+            const availableCards = [...tarotData];
+            const selectedCards = [];
+
+            for (let i = 0; i < selectedCount; i++) {
+                const randomIndex = Math.floor(Math.random() * availableCards.length);
+                const card = availableCards.splice(randomIndex, 1)[0];
+                const isReversed = allowReverse && Math.random() < 0.5;
+                
+                selectedCards.push({
+                    ...card,
+                    isReversed: isReversed,
+                    revealed: false
+                });
+            }
+
+            drawnCards = selectedCards;
+
+            // 카드 HTML 생성
+            selectedCards.forEach((card, index) => {
+                const cardElement = createCardElement(card, index);
+                cardsArea.appendChild(cardElement);
+            });
+        }
+
+        // 카드 엘리먼트 생성
+        function createCardElement(card, index) {
+            const cardDiv = document.createElement('div');
+            cardDiv.className = `card ${card.isReversed ? 'reversed' : ''}`;
+            cardDiv.innerHTML = `
+                <div class="card-inner">
+                    <div class="card-front">
+                        <span>?</span>
+                    </div>
+                    <div class="card-back">
+                        <img src="Deck/${card.Id}.jpg" alt="${card.Name}" 
+                             onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDEyMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxMjAiIGhlaWdodD0iMjAwIiBmaWxsPSIjNjY3ZWVhIi8+Cjx0ZXh0IHg9IjYwIiB5PSIxMDAiIGZpbGw9IndoaXRlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkeT0iLjNlbSIgZm9udC1zaXplPSIxNCIgZm9udC1mYW1pbHk9InNhbnMtc2VyaWYiPiR7Y2FyZC5OYW1lfTwvdGV4dD4KPC9zdmc+'">
+                    </div>
+                </div>
+            `;
+
+            cardDiv.addEventListener('click', () => revealCard(cardDiv, card, index));
+            return cardDiv;
+        }
+
+        // 카드 뒤집기
+        function revealCard(cardElement, card, index) {
+            if (card.revealed) {
+                // 이미 뒤집힌 카드 클릭시 상세 페이지로
+                showCardDetail(card.Id);
+                return;
+            }
+
+            cardElement.classList.add('flipped');
+            card.revealed = true;
+
+            // 클릭 이벤트 업데이트 - 이제 상세 페이지로 이동
+            setTimeout(() => {
+                cardElement.style.cursor = 'pointer';
+                cardElement.title = '클릭하여 상세 정보 보기';
+            }, 600);
+        }
+
+        // 카드 리스트 로드
+        async function loadCardsList() {
+            const loading = document.getElementById('list-loading');
+            const grid = document.getElementById('cards-grid');
+
+            if (!tarotData) {
+                await loadTarotData();
+            }
+
+            if (tarotData) {
+                loading.style.display = 'none';
+                grid.style.display = 'grid';
+                grid.innerHTML = '';
+
+                tarotData.forEach(card => {
+                    const cardItem = document.createElement('div');
+                    cardItem.className = 'card-item';
+                    cardItem.innerHTML = `
+                        <img src="Deck/${card.Id}.jpg" alt="${card.Name}" 
+                             onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTUwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDE1MCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxNTAiIGhlaWdodD0iMjAwIiBmaWxsPSIjNjY3ZWVhIi8+Cjx0ZXh0IHg9Ijc1IiB5PSIxMDAiIGZpbGw9IndoaXRlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkeT0iLjNlbSIgZm9udC1zaXplPSIxNCIgZm9udC1mYW1pbHk9InNhbnMtc2VyaWYiPiR7Y2FyZC5OYW1lfTwvdGV4dD4KPC9zdmc+'">
+                        <div class="card-item-info">
+                            <div class="card-item-name">${card.Name}</div>
+                            <div class="card-item-keywords">
+                                ${card.Keyword.slice(0, 4).join(', ')}${card.Keyword.length > 4 ? '...' : ''}
+                            </div>
+                        </div>
+                    `;
+
+                    cardItem.addEventListener('click', () => showCardDetail(card.Id));
+                    grid.appendChild(cardItem);
+                });
+            }
+        }
+
+        // 카드 상세 정보 표시
+        function showCardDetail(cardId) {
+            if (!tarotData) return;
+
+            const card = tarotData.find(c => c.Id === cardId);
+            if (!card) return;
+
+            currentCardId = cardId;
+
+            // 상세 페이지로 전환
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.remove('active');
+            });
+            document.getElementById('detail-page').classList.add('active', 'fade-in');
+
+            // 상세 내용 생성
+            const detailContainer = document.getElementById('card-detail');
+            detailContainer.innerHTML = `
+                <button class="back-btn" onclick="goBack()">← 돌아가기</button>
+                
+                <div class="card-detail-header">
+                    <div class="card-detail-image">
+                        <img src="Deck/${card.Id}.jpg" alt="${card.Name}"
+                             onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjM1MCIgdmlld0JveD0iMCAwIDIwMCAzNTAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMzUwIiBmaWxsPSIjNjY3ZWVhIi8+Cjx0ZXh0IHg9IjEwMCIgeT0iMTc1IiBmaWxsPSJ3aGl0ZSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iIGZvbnQtc2l6ZT0iMTgiIGZvbnQtZmFtaWx5PSJzYW5zLXNlcmlmIj4ke2NhcmQuTmFtZX08L3RleHQ+Cjwvc3ZnPg=='">
+                    </div>
+                    <div class="card-detail-info">
+                        <h2>${card.Name}</h2>
+                        <p class="card-detail-description">${card.Description}</p>
+                        <div class="card-detail-keywords">
+                            ${card.Keyword.map(keyword => `<span class="keyword-tag">${keyword}</span>`).join('')}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="detail-sections">
+                    <div class="detail-section">
+                        <h3>💕 연애</h3>
+                        <ul>
+                            ${card.Love.map(item => `<li>${item}</li>`).join('')}
+                        </ul>
+                    </div>
+
+                    <div class="detail-section">
+                        <h3>👥 인간관계</h3>
+                        <ul>
+                            ${card.Relationship.map(item => `<li>${item}</li>`).join('')}
+                        </ul>
+                    </div>
+
+                    <div class="detail-section">
+                        <h3>💰 금전</h3>
+                        <ul>
+                            ${card.Money.map(item => `<li>${item}</li>`).join('')}
+                        </ul>
+                    </div>
+
+                    <div class="detail-section">
+                        <h3>💼 직업</h3>
+                        <ul>
+                            ${card.Work.map(item => `<li>${item}</li>`).join('')}
+                        </ul>
+                    </div>
+
+                    ${card.Advice ? `
+                    <div class="detail-section">
+                        <h3>💡 조언</h3>
+                        <ul>
+                            ${card.Advice.map(item => `<li>${item}</li>`).join('')}
+                        </ul>
+                    </div>
+                    ` : ''}
+
+                    ${card.Warning ? `
+                    <div class="detail-section">
+                        <h3>⚠️ 경고</h3>
+                        <ul>
+                            ${card.Warning.map(item => `<li>${item}</li>`).join('')}
+                        </ul>
+                    </div>
+                    ` : ''}
+                </div>
+            `;
+        }
+
+        // 뒤로 가기
+        function goBack() {
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.remove('active');
+            });
+            
+            // 이전 페이지 결정 (뽑기에서 왔는지 리스트에서 왔는지)
+            if (drawnCards.length > 0) {
+                document.getElementById('draw-page').classList.add('active');
+                document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+                document.querySelector('[onclick="showPage(\'draw\')"]').classList.add('active');
+            } else {
+                document.getElementById('list-page').classList.add('active');
+                document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+                document.querySelector('[onclick="showPage(\'list\')"]').classList.add('active');
+            }
+        }
+
+                 // 페이지 로드 시 데이터 로드
+         window.addEventListener('load', async () => {
+             await loadTarotData();
+             // 기본적으로 카드 리스트 표시
+             loadCardsList();
+         });
+    </script>
+</body>
+</html>
