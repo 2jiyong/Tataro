@@ -227,6 +227,11 @@
             transform: rotate(180deg);
         }
 
+        .card.reversed .card-front,
+        .card.reversed .card-back {
+            border: 3px solid #ff4444;
+        }
+
         .card-name {
             text-align: center;
             margin-top: 10px;
@@ -429,8 +434,8 @@
             }
 
             .card {
-                width: 80px;
-                height: 130px;
+                width: 90px;
+                height: 150px;
             }
 
             .card-name {
@@ -642,7 +647,7 @@
                              onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDEyMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxMjAiIGhlaWdodD0iMjAwIiBmaWxsPSIjNjY3ZWVhIi8+Cjx0ZXh0IHg9IjYwIiB5PSIxMDAiIGZpbGw9IndoaXRlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkeT0iLjNlbSIgZm9udC1zaXplPSIxNCIgZm9udC1mYW1pbHk9InNhbnMtc2VyaWYiPiR7Y2FyZC5OYW1lfTwvdGV4dD4KPC9zdmc+'">
                     </div>
                 </div>
-                <div class="card-name">${card.Name}${card.isReversed ? ' (역방향)' : ''}</div>
+                <div class="card-name">${card.Name}</div>
             `;
 
             cardDiv.addEventListener('click', () => revealCard(cardDiv, card, index));
