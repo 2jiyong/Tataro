@@ -165,7 +165,7 @@
             flex-wrap: wrap;
             gap: 20px;
             margin-top: 30px;
-            min-height: 200px;
+            min-height: 250px;
         }
 
         .card {
@@ -223,6 +223,21 @@
 
         .card.reversed .card-back img {
             transform: rotate(180deg);
+        }
+
+        .card-name {
+            text-align: center;
+            margin-top: 10px;
+            font-size: 0.9rem;
+            color: #333;
+            font-weight: bold;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            min-height: 20px;
+        }
+
+        .card.flipped .card-name {
+            opacity: 1;
         }
 
         /* 카드 리스트 페이지 */
@@ -330,6 +345,7 @@
             border-radius: 15px;
             cursor: pointer;
             transition: all 0.3s ease;
+            margin-bottom: 30px;
         }
 
         .back-btn:hover {
@@ -405,6 +421,11 @@
             .card {
                 width: 100px;
                 height: 160px;
+            }
+
+            .card-name {
+                font-size: 0.8rem;
+                margin-top: 8px;
             }
         }
 
@@ -606,6 +627,7 @@
                              onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDEyMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxMjAiIGhlaWdodD0iMjAwIiBmaWxsPSIjNjY3ZWVhIi8+Cjx0ZXh0IHg9IjYwIiB5PSIxMDAiIGZpbGw9IndoaXRlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkeT0iLjNlbSIgZm9udC1zaXplPSIxNCIgZm9udC1mYW1pbHk9InNhbnMtc2VyaWYiPiR7Y2FyZC5OYW1lfTwvdGV4dD4KPC9zdmc+'">
                     </div>
                 </div>
+                <div class="card-name">${card.Name}${card.isReversed ? ' (역방향)' : ''}</div>
             `;
 
             cardDiv.addEventListener('click', () => revealCard(cardDiv, card, index));
