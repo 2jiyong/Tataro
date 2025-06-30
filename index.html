@@ -227,8 +227,7 @@
             transform: rotate(180deg);
         }
 
-        .card.reversed .card-front,
-        .card.reversed .card-back {
+        .card.reversed.flipped .card-back {
             border: 3px solid #ff4444;
         }
 
@@ -442,6 +441,20 @@
                 font-size: 0.7rem;
                 margin-top: 5px;
             }
+
+            .card-item img {
+                height: 160px;
+            }
+
+            .cards-grid {
+                grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            }
+
+            .search-box {
+                max-width: 300px;
+                padding: 10px 16px;
+                font-size: 0.9rem;
+            }
         }
 
         /* 로딩 애니메이션 */
@@ -475,6 +488,39 @@
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
         }
+
+        /* 검색 기능 */
+        .search-container {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .search-box {
+            width: 100%;
+            max-width: 400px;
+            padding: 12px 20px;
+            border: 2px solid #ddd;
+            border-radius: 25px;
+            font-size: 1rem;
+            outline: none;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .search-box:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 10px rgba(102, 126, 234, 0.3);
+        }
+
+        .search-box::placeholder {
+            color: #999;
+        }
+
+        .search-results-count {
+            margin-top: 10px;
+            color: #666;
+            font-size: 0.9rem;
+        }
     </style>
 </head>
 <body>
@@ -492,6 +538,12 @@
         <!-- 카드 리스트 페이지 -->
         <div id="list-page" class="page active">
             <h2 style="text-align: center; margin-bottom: 20px; color: #333;">모든 타로 카드</h2>
+            
+            <div class="search-container" id="search-container" style="display: none;">
+                <input type="text" class="search-box" id="search-input" placeholder="카드 이름으로 검색하세요..." oninput="searchCards()">
+                <div class="search-results-count" id="search-results-count"></div>
+            </div>
+            
             <div class="loading" id="list-loading">
                 <div class="spinner"></div>
             </div>
@@ -541,6 +593,7 @@
         let currentCardId = null;
         let previousPage = 'list'; // 상세페이지로 오기 전 페이지 추적
         let savedScrollPosition = 0; // 스크롤 위치 저장
+        let allCards = []; // 검색을 위한 전체 카드 데이터 저장
 
         // 타로 데이터 로드
         async function loadTarotData() {
@@ -676,6 +729,7 @@
         async function loadCardsList() {
             const loading = document.getElementById('list-loading');
             const grid = document.getElementById('cards-grid');
+            const searchContainer = document.getElementById('search-container');
 
             if (!tarotData) {
                 await loadTarotData();
@@ -684,26 +738,66 @@
             if (tarotData) {
                 loading.style.display = 'none';
                 grid.style.display = 'grid';
-                grid.innerHTML = '';
-
-                tarotData.forEach(card => {
-                    const cardItem = document.createElement('div');
-                    cardItem.className = 'card-item';
-                    cardItem.innerHTML = `
-                        <img src="Deck/${card.Id}.jpg" alt="${card.Name}" 
-                             onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTUwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDE1MCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxNTAiIGhlaWdodD0iMjAwIiBmaWxsPSIjNjY3ZWVhIi8+Cjx0ZXh0IHg9Ijc1IiB5PSIxMDAiIGZpbGw9IndoaXRlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkeT0iLjNlbSIgZm9udC1zaXplPSIxNCIgZm9udC1mYW1pbHk9InNhbnMtc2VyaWYiPiR7Y2FyZC5OYW1lfTwvdGV4dD4KPC9zdmc+'">
-                        <div class="card-item-info">
-                            <div class="card-item-name">${card.Name}</div>
-                            <div class="card-item-keywords">
-                                ${card.Keyword.slice(0, 4).join(', ')}${card.Keyword.length > 4 ? '...' : ''}
-                            </div>
-                        </div>
-                    `;
-
-                    cardItem.addEventListener('click', () => showCardDetail(card.Id, 'list'));
-                    grid.appendChild(cardItem);
-                });
+                searchContainer.style.display = 'block';
+                
+                // 전체 카드 데이터 저장
+                allCards = [...tarotData];
+                
+                // 검색어가 있으면 필터링, 없으면 전체 표시
+                const searchTerm = document.getElementById('search-input').value;
+                const cardsToShow = searchTerm ? filterCards(searchTerm) : tarotData;
+                
+                displayCards(cardsToShow);
             }
+        }
+
+        // 카드 표시 함수
+        function displayCards(cards) {
+            const grid = document.getElementById('cards-grid');
+            const searchResultsCount = document.getElementById('search-results-count');
+            
+            grid.innerHTML = '';
+
+            cards.forEach(card => {
+                const cardItem = document.createElement('div');
+                cardItem.className = 'card-item';
+                cardItem.innerHTML = `
+                    <img src="Deck/${card.Id}.jpg" alt="${card.Name}" 
+                         onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTUwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDE1MCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxNTAiIGhlaWdodD0iMjAwIiBmaWxsPSIjNjY3ZWVhIi8+Cjx0ZXh0IHg9Ijc1IiB5PSIxMDAiIGZpbGw9IndoaXRlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkeT0iLjNlbSIgZm9udC1zaXplPSIxNCIgZm9udC1mYW1pbHk9InNhbnMtc2VyaWYiPiR7Y2FyZC5OYW1lfTwvdGV4dD4KPC9zdmc+'">
+                    <div class="card-item-info">
+                        <div class="card-item-name">${card.Name}</div>
+                        <div class="card-item-keywords">
+                            ${card.Keyword.slice(0, 4).join(', ')}${card.Keyword.length > 4 ? '...' : ''}
+                        </div>
+                    </div>
+                `;
+
+                cardItem.addEventListener('click', () => showCardDetail(card.Id, 'list'));
+                grid.appendChild(cardItem);
+            });
+
+            // 검색 결과 수 표시
+            const searchTerm = document.getElementById('search-input').value;
+            if (searchTerm) {
+                searchResultsCount.textContent = `"${searchTerm}" 검색 결과: ${cards.length}장`;
+            } else {
+                searchResultsCount.textContent = `전체 카드: ${cards.length}장`;
+            }
+        }
+
+        // 카드 필터링 함수
+        function filterCards(searchTerm) {
+            const term = searchTerm.toLowerCase().trim();
+            return allCards.filter(card => 
+                card.Name.toLowerCase().includes(term)
+            );
+        }
+
+        // 검색 함수
+        function searchCards() {
+            const searchTerm = document.getElementById('search-input').value;
+            const cardsToShow = searchTerm ? filterCards(searchTerm) : allCards;
+            displayCards(cardsToShow);
         }
 
         // 카드 상세 정보 표시
